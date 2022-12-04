@@ -59,7 +59,6 @@ class QCommandLabel(QtW.QLabel):
             return None
         text = self.command_text()
         words = input_text.split(" ")
-        colored = [f"<b><font color='blue'>{w}</font></b>" for w in words]
         pattern = re.compile("|".join(words), re.IGNORECASE)
 
         output_texts: list[str] = []
@@ -75,13 +74,6 @@ class QCommandLabel(QtW.QLabel):
         self.setText("".join(output_texts))
         return None
 
-    def set_selected(self, select: bool):
-        """Set the command label to be selected or not."""
-        if select:
-            self.setStyleSheet("border: 4px solid blue;")
-        else:
-            self.setStyleSheet("border: none;")
-
 
 class QCommandList(QtW.QListView):
     commandClicked = Signal(int)  # one of the items is clicked
@@ -92,6 +84,7 @@ class QCommandList(QtW.QListView):
         self.setSelectionMode(QtW.QAbstractItemView.SelectionMode.NoSelection)
         self._selected_index = 0
         self._label_widgets: list[QCommandLabel] = []
+        self._current_max_index = 0
         for i in range(self.model()._max_matches):
             lw = QCommandLabel()
             self._label_widgets.append(lw)
@@ -106,16 +99,15 @@ class QCommandList(QtW.QListView):
     def move_selection(self, dx: int) -> None:
         self._selected_index += dx
         self._selected_index = max(0, self._selected_index)
-        self._selected_index = min(
-            len(self.model()._commands) - 1, self._selected_index
-        )
+        self._selected_index = min(self._current_max_index - 1, self._selected_index)
         self.update_selection()
         return None
 
     def update_selection(self):
-        for i in range(self.model().rowCount()):
-            label = self._label_widgets[i]
-            label.set_selected(i == self._selected_index)
+        index = self.model().index(self._selected_index)
+        self.selectionModel().setCurrentIndex(
+            index, QtCore.QItemSelectionModel.SelectionFlag.ClearAndSelect
+        )
         return None
 
     @property
@@ -165,8 +157,10 @@ class QCommandList(QtW.QListView):
                 row += 1
 
                 if row >= max_matches:
+                    self._current_max_index = max_matches
                     break
         else:
+            self._current_max_index = row
             for row in range(row, max_matches):
                 self.setRowHidden(row, True)
         self.update_selection()
