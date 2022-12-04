@@ -7,7 +7,7 @@ name = "qt-command-palette"
 description = "A command palette widget for Qt applications"
 readme = "README.md"
 requires-python = ">=3.8"
-license = { file = "LICENSE" }
+license = { file = "LICENSE.txt" }
 keywords = []
 authors = [
   { name = "Hanjin Liu", email = "hanjin.liu@bs.s.u-tokyo.ac.jp" },
