@@ -23,6 +23,7 @@ class QCommandPalette(QtW.QDialog):
         self.setLayout(_layout)
 
         self._line.textChanged.connect(self._on_text_changed)
+        self._list.commandClicked.connect(self._on_command_clicked)
 
     def add_command(self, cmd: Command):
         self._list.add_command(cmd)
@@ -34,6 +35,11 @@ class QCommandPalette(QtW.QDialog):
 
     def _on_text_changed(self, text: str):
         self._list.update_for_text(text)
+        return None
+
+    def _on_command_clicked(self, index: int):
+        self._list.execute(index)
+        self.hide()
         return None
 
     def focusOutEvent(self, a0: QtGui.QFocusEvent) -> None:

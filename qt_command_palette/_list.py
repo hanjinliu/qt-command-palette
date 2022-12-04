@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING, Iterator
 import logging
 
-from qtpy import QtWidgets as QtW, QtGui, QtCore
+from qtpy import QtWidgets as QtW, QtCore
 from qtpy.QtCore import Qt, Signal
 
 from ._commands import Command
@@ -43,13 +43,12 @@ class QCommandLabel(QtW.QLabel):
         return self._command
 
     def set_command(self, cmd: Command) -> None:
+        """Set command to this widget."""
         command_text = cmd.fmt()
         self._command_text = command_text
         self._command = cmd
         self.setText(command_text)
-
-    def toolTip(self) -> str:
-        return self._command.tooltip
+        self.setToolTip(cmd.tooltip)
 
     def command_text(self) -> str:
         return self._command_text
@@ -82,9 +81,9 @@ class QCommandList(QtW.QListView):
             lw = QCommandLabel()
             self._label_widgets.append(lw)
             self.setIndexWidget(self.model().index(i), lw)
+        self.pressed.connect(self._on_clicked)
 
-    def mouseReleaseEvent(self, e: QtGui.QMouseEvent) -> None:
-        index = self.indexAt(e.pos())
+    def _on_clicked(self, index: QtCore.QModelIndex) -> None:
         if index.isValid():
             self.commandClicked.emit(index.row())
             return None
@@ -122,9 +121,11 @@ class QCommandList(QtW.QListView):
             if not self.isRowHidden(i):
                 yield self.command_at(i)
 
-    def execute(self):
+    def execute(self, index: int | None = None) -> None:
         """Execute the currently selected command."""
-        cmd = self.command_at(self._selected_index)
+        if index is None:
+            index = self._selected_index
+        cmd = self.command_at(index)
         logger.debug(f"executing command: {cmd.fmt()}")
         cmd()
 
