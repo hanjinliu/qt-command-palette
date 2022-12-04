@@ -26,4 +26,6 @@ class Command(Generic[_R]):
 
     def matches(self, input_text: str) -> bool:
         """Return True if the command matches the input text."""
-        return input_text in self.fmt()
+        fmt = self.fmt()
+        words = input_text.split(" ")
+        return all(word in fmt for word in words)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING, Iterator
 import logging
+import re
 
 from qtpy import QtWidgets as QtW, QtCore
 from qtpy.QtCore import Qt, Signal
@@ -53,11 +54,25 @@ class QCommandLabel(QtW.QLabel):
     def command_text(self) -> str:
         return self._command_text
 
-    def set_match(self, input_text: str, /):
+    def set_text_colors(self, input_text: str, /):
+        if input_text == "":
+            return None
         text = self.command_text()
-        colored_text = f"<b><font color='blue'>{input_text}</font></b>"
-        text_new = text.replace(input_text, colored_text)
-        self.setText(text_new)
+        words = input_text.split(" ")
+        colored = [f"<b><font color='blue'>{w}</font></b>" for w in words]
+        pattern = re.compile("|".join(words), re.IGNORECASE)
+
+        output_texts: list[str] = []
+        last_end = 0
+        for match_obj in pattern.finditer(text):
+            output_texts.append(text[last_end : match_obj.start()])
+            word = match_obj.group()
+            colored = f"<b><font color='blue'>{word}</font></b>"
+            output_texts.append(colored)
+            last_end = match_obj.end()
+        output_texts.append(text[last_end:])
+
+        self.setText("".join(output_texts))
         return None
 
     def set_selected(self, select: bool):
@@ -88,16 +103,16 @@ class QCommandList(QtW.QListView):
             self.commandClicked.emit(index.row())
             return None
 
-    def move_highlight(self, dx: int) -> None:
+    def move_selection(self, dx: int) -> None:
         self._selected_index += dx
         self._selected_index = max(0, self._selected_index)
         self._selected_index = min(
             len(self.model()._commands) - 1, self._selected_index
         )
-        self.update_highlight()
+        self.update_selection()
         return None
 
-    def update_highlight(self):
+    def update_selection(self):
         for i in range(self.model().rowCount()):
             label = self._label_widgets[i]
             label.set_selected(i == self._selected_index)
@@ -121,6 +136,7 @@ class QCommandList(QtW.QListView):
 
     def set_command_at(self, index: int, cmd: Command) -> None:
         self.indexWidget(self.model().index(index)).set_command(cmd)
+        return None
 
     def iter_command(self) -> Iterator[Command]:
         for i in range(self.model().rowCount()):
@@ -145,7 +161,7 @@ class QCommandList(QtW.QListView):
                 self.setRowHidden(row, False)
                 lw = self.indexWidget(self.model().index(row))
                 lw.set_command(cmd)
-                lw.set_match(input_text)
+                lw.set_text_colors(input_text)
                 row += 1
 
                 if row >= max_matches:
@@ -153,7 +169,7 @@ class QCommandList(QtW.QListView):
         else:
             for row in range(row, max_matches):
                 self.setRowHidden(row, True)
-        self.update_highlight()
+        self.update_selection()
         self.update()
         return None
 

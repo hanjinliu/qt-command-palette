@@ -101,6 +101,7 @@ class CommandPalette:
         return widget
 
     def install(self, parent: QtW.QWidget, keys: str | None = None) -> None:
+        """Install command palette on a widget."""
         widget = self.get_widget(parent)
         widget.install_to(parent)
         if keys is not None:
@@ -157,10 +158,3 @@ def register_shortcut(keys: str, parent: QtW.QWidget, target: Callable):
     shortcut = QShortcut(QtGui.QKeySequence(keys), parent)
     shortcut.activated.connect(target)
     return None
-
-
-# global command palette
-
-_COMMAND = CommandPalette()
-
-register = _COMMAND.register

@@ -59,9 +59,9 @@ class QCommandPalette(QtW.QDialog):
                 self._list.execute()
                 self.hide()
             elif key == Qt.Key.Key_Up:
-                self._list.move_highlight(-1)
+                self._list.move_selection(-1)
             elif key == Qt.Key.Key_Down:
-                self._list.move_highlight(1)
+                self._list.move_selection(1)
         return super().keyPressEvent(a0)
 
     def show(self):
