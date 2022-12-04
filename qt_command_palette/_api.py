@@ -35,6 +35,10 @@ class CommandPalette:
         self._commands: list[Command] = []
         self._widget_map: dict[int, QCommandPalette] = {}
 
+    @property
+    def commands(self) -> list[Command]:
+        return self._commands.copy()
+
     @overload
     def register(
         self,
@@ -120,7 +124,7 @@ class CommandPalette:
         widget = self.get_widget(parent)
         widget.install_to(parent)
         if keys is not None:
-            register_shortcut(keys, parent, lambda: self.show_widget(parent))
+            _register_shortcut(keys, parent, lambda: self.show_widget(parent))
         return None
 
 
@@ -141,6 +145,7 @@ class CommandGroup:
 
     @property
     def title(self) -> str:
+        """The title of this group."""
         return self._title
 
     @overload
@@ -166,7 +171,7 @@ class CommandGroup:
         return self.palette.register(*args, **kwargs)
 
 
-def register_shortcut(keys: str, parent: QtW.QWidget, target: Callable):
+def _register_shortcut(keys: str, parent: QtW.QWidget, target: Callable):
     """Register a callback to a key-binding globally."""
     from qtpy import QT6, QtGui
 
@@ -178,3 +183,73 @@ def register_shortcut(keys: str, parent: QtW.QWidget, target: Callable):
     shortcut = QShortcut(QtGui.QKeySequence(keys), parent)
     shortcut.activated.connect(target)
     return None
+
+
+_GLOBAL_PALETTES: dict[str, CommandPalette] = {}
+_DEFAULT_PALETTE = CommandPalette()
+
+
+def get_palette(name: str | None = None) -> CommandPalette:
+    """
+    Get the global command palette object.
+
+    Examples
+    --------
+    >>> palette = get_palette()  # get the default palette
+    >>> palette = get_palette("my_module")  # get a palette for specific app
+    """
+    global _GLOBAL_PALETTES
+
+    if name is None:
+        return _DEFAULT_PALETTE
+    if not isinstance(name, str):
+        raise TypeError(f"Expected str, got {type(name).__name__}")
+    if (palette := _GLOBAL_PALETTES.get(name, None)) is None:
+        palette = _GLOBAL_PALETTES[name] = CommandPalette()
+    return palette
+
+
+def add_group(title: str) -> CommandGroup:
+    """
+    Add a command group to the global command palette.
+
+    Examples
+    --------
+    >>> group = add_group("My Commands")
+    """
+    return get_palette().add_group(title)
+
+
+@overload
+def register(
+    func: _F,
+    title: str | None,
+    desc: str | None = None,
+    tooltip: str | None = None,
+) -> _F:
+    ...
+
+
+@overload
+def register(
+    title: str | None,
+    desc: str | None = None,
+    tooltip: str | None = None,
+) -> Callable[[_F], _F]:
+    ...
+
+
+def register(*args, **kwargs):
+    """
+    Register a function to the global command palette.
+
+    Examples
+    --------
+    >>> @register
+    ... def my_command():
+    ...     print("Hello World!")
+    >>> @register("My Command")
+    ... def my_command():
+    ...     print("Hello World!")
+    """
+    return get_palette().register(*args, **kwargs)

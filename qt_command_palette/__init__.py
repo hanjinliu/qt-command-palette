@@ -1,4 +1,4 @@
-from ._api import CommandPalette
+from ._api import CommandPalette, get_palette, add_group, register
 from ._commands import Command
 
-__all__ = ["Command", "CommandPalette"]
+__all__ = ["Command", "CommandPalette", "get_palette", "add_group", "register"]
