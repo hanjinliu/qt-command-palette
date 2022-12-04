@@ -13,11 +13,13 @@ This module provides a Pythonic way to register command actions to any Qt widget
 - Register functions using `register` function.
 
   ```python
-  from qt_command_palette import CommandPalette
+  from qt_command_palette import get_palette
 
-  palette = CommandPalette()  # create command palette instance
+  # create command palette instance (with optional app name as an argument)
+  palette = get_palette("myapp")
 
-  group = palette("Command group 1")  # prepare a command group
+  # prepare a command group
+  group = palette("Command group 1")
 
   # This function will be shown as "Command group 1: run_something"
   @group.register

@@ -78,12 +78,13 @@ class CommandPalette:
 
         if title is None:
             title = ""
-        if desc is None:
-            desc = getattr(func, "__name__", repr(func))
-        if tooltip is None:
-            tooltip = getattr(func, "__doc__", "")
 
         def wrapper(func: _F) -> _F:
+            nonlocal title, desc, tooltip
+            if desc is None:
+                desc = getattr(func, "__name__", repr(func))
+            if tooltip is None:
+                tooltip = getattr(func, "__doc__", "") or ""
             cmd = Command(func, title, desc, tooltip)
             self._commands.append(cmd)
             return func
