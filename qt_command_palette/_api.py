@@ -1,8 +1,10 @@
 from __future__ import annotations
+from functools import wraps
 from typing import Any, Callable, TypeVar, overload, TYPE_CHECKING
 import weakref
 import inspect
 from ._commands import Command
+from ._storage import Storage
 
 if TYPE_CHECKING:
     from ._widget import QCommandPalette
@@ -31,9 +33,10 @@ def register_without_func(
 class CommandPalette:
     """The command palette interface."""
 
-    def __init__(self) -> None:
+    def __init__(self, name: str) -> None:
         self._commands: list[Command] = []
         self._widget_map: dict[int, QCommandPalette] = {}
+        self._name = name
 
     @property
     def commands(self) -> list[Command]:
@@ -85,7 +88,14 @@ class CommandPalette:
                 desc = getattr(func, "__name__", repr(func))
             if tooltip is None:
                 tooltip = getattr(func, "__doc__", "") or ""
-            cmd = Command(func, title, desc, tooltip)
+
+            storage = Storage.instance(self._name)
+
+            @wraps(func)
+            def _func():
+                return storage.call(func)
+
+            cmd = Command(_func, title, desc, tooltip)
             self._commands.append(cmd)
             return func
 
@@ -165,7 +175,10 @@ class CommandGroup:
         if "title" in kwargs:
             raise TypeError("register() got an unexpected keyword argument 'title'")
         if len(args) > 0:
-            args = args[:1] + (self.title,) + args[1:]
+            if callable(args[0]):
+                args = args[:1] + (self.title,) + args[1:]
+            else:
+                args = (self.title,) + args
         else:
             args = (self.title,)
 
@@ -187,7 +200,7 @@ def _register_shortcut(keys: str, parent: QtW.QWidget, target: Callable):
 
 
 _GLOBAL_PALETTES: dict[str, CommandPalette] = {}
-_DEFAULT_PALETTE = CommandPalette()
+_DEFAULT_PALETTE = CommandPalette(name="default")
 
 
 def get_palette(name: str | None = None) -> CommandPalette:
@@ -206,7 +219,7 @@ def get_palette(name: str | None = None) -> CommandPalette:
     if not isinstance(name, str):
         raise TypeError(f"Expected str, got {type(name).__name__}")
     if (palette := _GLOBAL_PALETTES.get(name, None)) is None:
-        palette = _GLOBAL_PALETTES[name] = CommandPalette()
+        palette = _GLOBAL_PALETTES[name] = CommandPalette(name=name)
     return palette
 
 

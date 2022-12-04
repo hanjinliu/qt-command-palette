@@ -10,7 +10,7 @@ _R = TypeVar("_R")
 class Command(Generic[_R]):
     """A command representation."""
 
-    function: Callable[[], _R]
+    function: Callable[..., _R]
     title: str
     desc: str
     tooltip: str = ""

@@ -1,6 +1,6 @@
-from qt_command_palette import CommandPalette
+from qt_command_palette import get_palette
 
-palette = CommandPalette()
+palette = get_palette(name=__name__)
 
 
 def test_register_no_args():
