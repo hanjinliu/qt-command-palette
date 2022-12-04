@@ -55,9 +55,10 @@ class CommandPalette:
         ...
 
     def register(self, *args, **kwargs):
-        if len(args) == 0:
-            raise TypeError("register() requires at least 1 positional argument")
-        if callable(args[0]):
+        """
+        Register a function to the command palette.
+        """
+        if len(args) > 0 and callable(args[0]):
             bound = register_with_func.bind(*args, **kwargs)
         else:
             bound = register_without_func.bind(*args, **kwargs)
@@ -100,12 +101,26 @@ class CommandPalette:
             self._widget_map[_id] = widget
         return widget
 
+    def show_widget(self, parent: Any = __default) -> None:
+        """Show command palette widget."""
+        self.get_widget(parent).show()
+        return None
+
     def install(self, parent: QtW.QWidget, keys: str | None = None) -> None:
-        """Install command palette on a widget."""
+        """
+        Install command palette on a Qt widget.
+
+        Parameters
+        ----------
+        parent : QtW.QWidget
+            The widget to install on.
+        keys : str, optional
+            If given, this key sequence will be used to show the command palette.
+        """
         widget = self.get_widget(parent)
         widget.install_to(parent)
         if keys is not None:
-            register_shortcut(keys, parent, lambda: widget.show)
+            register_shortcut(keys, parent, lambda: self.show_widget(parent))
         return None
 
 
@@ -118,7 +133,8 @@ class CommandGroup:
         return f"CommandGroup<{self.title}>"
 
     @property
-    def palette(self):
+    def palette(self) -> CommandPalette:
+        """The parent command palette object."""
         if palette := self._palette_ref():
             return palette
         raise RuntimeError("CommandPalette is already destroyed.")
@@ -142,7 +158,11 @@ class CommandGroup:
     def register(self, *args, **kwargs):
         if "title" in kwargs:
             raise TypeError("register() got an unexpected keyword argument 'title'")
-        kwargs["title"] = self.title
+        if len(args) > 0:
+            args = args[:1] + (self.title,) + args[1:]
+        else:
+            args = (self.title,)
+
         return self.palette.register(*args, **kwargs)
 
 

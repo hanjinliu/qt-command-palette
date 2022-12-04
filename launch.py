@@ -12,19 +12,11 @@ def define(text: str):
 
 
 if __name__ == "__main__":
-    from qtpy.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QPushButton
+    from qtpy.QtWidgets import QApplication, QWidget
 
     app = QApplication([])
     main = QWidget()
-    main.setLayout(QVBoxLayout())
-
-    for i in range(10):
-        label = QLabel(f"label {i}")
-        main.layout().addWidget(label)
-
-    button = QPushButton("show")
-    main.layout().addWidget(button)
-    button.clicked.connect(lambda: palette.get_widget(main).show())
+    main.setMinimumSize(400, 300)
 
     palette = CommandPalette()
     group_0 = palette.add_group("test")
