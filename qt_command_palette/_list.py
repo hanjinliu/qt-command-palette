@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Iterator
 import logging
 
 from qtpy import QtWidgets as QtW, QtGui, QtCore
@@ -9,33 +9,48 @@ from ._commands import Command
 
 logger = logging.getLogger(__name__)
 
+
 class QCommandMatchModel(QtCore.QAbstractListModel):
+    """A list model for the command palette."""
+
     def __init__(self, parent: QtW.QWidget = None):
         super().__init__(parent)
         self._commands: list[Command] = []
-    
+        self._max_matches = 12
+
     def rowCount(self, parent: QtCore.QModelIndex = None) -> int:
-        return min(len(self._commands), 12)
-    
-    def columnCount(self, parent: QtCore.QModelIndex = None) -> int:
-        return 1
-    
+        return self._max_matches
+
     def data(self, index: QtCore.QModelIndex, role: int = ...) -> Any:
-        if role == Qt.ItemDataRole.ToolTipRole:
-            if not index.isValid():
-                return QtCore.QVariant()
-            cmd = self._commands[index.row()]
-            return cmd.tooltip
         return QtCore.QVariant()
-    
+
     def flags(self, index: QtCore.QModelIndex) -> Qt.ItemFlag:
         return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
 
+
 class QCommandLabel(QtW.QLabel):
-    def __init__(self, text: str):
-        super().__init__(text)
-        self._command_text = text
-    
+    """The label widget to display a command in the palette."""
+
+    def __init__(self, cmd: Command | None = None):
+        super().__init__()
+        if cmd is not None:
+            self.set_command(cmd)
+        else:
+            self._command_text = ""
+
+    def command(self) -> Command:
+        """Command bound to this label."""
+        return self._command
+
+    def set_command(self, cmd: Command) -> None:
+        command_text = cmd.fmt()
+        self._command_text = command_text
+        self._command = cmd
+        self.setText(command_text)
+
+    def toolTip(self) -> str:
+        return self._command.tooltip
+
     def command_text(self) -> str:
         return self._command_text
 
@@ -45,66 +60,100 @@ class QCommandLabel(QtW.QLabel):
         text_new = text.replace(input_text, colored_text)
         self.setText(text_new)
         return None
-    
-    def set_highlight(self, highlight: bool):
-        if highlight:
+
+    def set_selected(self, select: bool):
+        """Set the command label to be selected or not."""
+        if select:
             self.setStyleSheet("border: 4px solid blue;")
         else:
             self.setStyleSheet("border: none;")
-  
+
 
 class QCommandList(QtW.QListView):
-    clicked = Signal(int)  # one of the items is clicked
-    
+    commandClicked = Signal(int)  # one of the items is clicked
+
     def __init__(self, parent: QtW.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setModel(QCommandMatchModel(self))
         self.setSelectionMode(QtW.QAbstractItemView.SelectionMode.NoSelection)
         self._selected_index = 0
-    
+        self._label_widgets: list[QCommandLabel] = []
+        for i in range(self.model()._max_matches):
+            lw = QCommandLabel()
+            self._label_widgets.append(lw)
+            self.setIndexWidget(self.model().index(i), lw)
+
     def mouseReleaseEvent(self, e: QtGui.QMouseEvent) -> None:
         index = self.indexAt(e.pos())
         if index.isValid():
-            self.clicked(index.row())
+            self.commandClicked.emit(index.row())
             return None
-    
+
     def move_highlight(self, dx: int) -> None:
         self._selected_index += dx
         self._selected_index = max(0, self._selected_index)
-        self._selected_index = min(len(self.model()._commands) - 1, self._selected_index)
+        self._selected_index = min(
+            len(self.model()._commands) - 1, self._selected_index
+        )
         self.update_highlight()
         return None
-    
+
     def update_highlight(self):
         for i in range(self.model().rowCount()):
-            label = self.indexWidget(self.model().index(i))
-            label.set_highlight(i == self._selected_index)
+            label = self._label_widgets[i]
+            label.set_selected(i == self._selected_index)
         return None
-        
+
+    @property
+    def all_commands(self) -> list[Command]:
+        return self.model()._commands
+
     def add_command(self, command: Command) -> None:
-        self.model()._commands.append(command)
-        self.setIndexWidget(
-            self.model().index(len(self.model()._commands) - 1), 
-            QCommandLabel(command.fmt())
-        )
-    
+        self.all_commands.append(command)
+
+    def command_at(self, index: int) -> Command:
+        return self.indexWidget(self.model().index(index)).command()
+
+    def set_command_at(self, index: int, cmd: Command) -> None:
+        self.indexWidget(self.model().index(index)).set_command(cmd)
+
+    def iter_command(self) -> Iterator[Command]:
+        for i in range(self.model().rowCount()):
+            if not self.isRowHidden(i):
+                yield self.command_at(i)
+
     def execute(self):
-        cmd = self.model()._commands[self._selected_index]
+        """Execute the currently selected command."""
+        cmd = self.command_at(self._selected_index)
         logger.debug(f"executing command: {cmd.fmt()}")
         cmd()
-        
+
     def update_for_text(self, input_text: str) -> None:
+        """Update the list to match the input text."""
         self._selected_index = 0
-        for idx, cmd in enumerate(self.model()._commands):
-            show = input_text in cmd.fmt()
-            self.setRowHidden(idx, not show)
-            if show:
-                label = self.indexWidget(self.model().index(idx))
-                label.set_match(input_text)
+        max_matches = self.model()._max_matches
+        row = 0
+        for cmd in self.all_commands:
+            if cmd.matches(input_text):
+                self.setRowHidden(row, False)
+                lw = self.indexWidget(self.model().index(row))
+                lw.set_command(cmd)
+                lw.set_match(input_text)
+                row += 1
+
+                if row >= max_matches:
+                    break
+        else:
+            for row in range(row, max_matches):
+                self.setRowHidden(row, True)
         self.update_highlight()
         self.update()
         return None
 
     if TYPE_CHECKING:
-        def model(self) -> QCommandMatchModel: ...
-        def indexWidget(self, index: QtCore.QModelIndex) -> QCommandLabel: ...
+
+        def model(self) -> QCommandMatchModel:
+            ...
+
+        def indexWidget(self, index: QtCore.QModelIndex) -> QCommandLabel:
+            ...
