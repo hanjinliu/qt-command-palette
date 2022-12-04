@@ -8,7 +8,13 @@ This module provides a Pythonic way to register command actions to any Qt widget
 
 ![](example.gif)
 
-#### Usage
+## Installation
+
+```console
+pip install qt-command-palette
+```
+
+## Usage
 
 - Register functions using `register` function.
 
@@ -44,15 +50,3 @@ This module provides a Pythonic way to register command actions to any Qt widget
 
   qwidget.show()
   ```
-
------
-
-## Installation
-
-```console
-pip install qt-command-palette
-```
-
-## License
-
-`qt-command-palette` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
