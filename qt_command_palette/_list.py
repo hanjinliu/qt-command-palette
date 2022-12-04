@@ -109,6 +109,12 @@ class QCommandList(QtW.QListView):
 
     def add_command(self, command: Command) -> None:
         self.all_commands.append(command)
+        return None
+
+    def extend_command(self, commands: list[Command]) -> None:
+        """Extend the list of commands."""
+        self.all_commands.extend(commands)
+        return None
 
     def command_at(self, index: int) -> Command:
         return self.indexWidget(self.model().index(index)).command()

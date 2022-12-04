@@ -29,6 +29,10 @@ class QCommandPalette(QtW.QDialog):
         self._list.add_command(cmd)
         return None
 
+    def extend_command(self, list_of_commands: list[Command]):
+        self._list.extend_command(list_of_commands)
+        return None
+
     def install_to(self, parent: QtW.QWidget):
         self.setParent(parent, Qt.WindowType.SubWindow)
         self.hide()

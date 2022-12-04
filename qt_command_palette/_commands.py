@@ -8,9 +8,11 @@ _R = TypeVar("_R")
 
 @dataclass
 class Command(Generic[_R]):
+    """A command representation."""
+
     function: Callable[[], _R]
     title: str
-    name: str
+    desc: str
     tooltip: str = ""
 
     def __call__(self) -> _R:
@@ -18,7 +20,9 @@ class Command(Generic[_R]):
 
     def fmt(self) -> str:
         """Format command for display in the palette."""
-        return f"{self.title}: {self.name}"
+        if self.title:
+            return f"{self.title}: {self.desc}"
+        return self.desc
 
     def matches(self, input_text: str) -> bool:
         """Return True if the command matches the input text."""
