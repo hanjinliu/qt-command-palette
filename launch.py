@@ -19,13 +19,13 @@ if __name__ == "__main__":
     main.setMinimumSize(400, 300)
 
     palette = CommandPalette()
-    group_0 = palette.add_group("test")
-    group_1 = palette.add_group("some other")
+    group_0 = palette.add_group("Example")
+    group_1 = palette.add_group("Something new")
 
     for txt in ["foo", "bar", "baz"]:
         group_0.register(define(txt))
 
-    for txt in ["hello", "world"]:
+    for txt in ["hello world", "goobye world", "hello again"]:
         group_1.register(define(txt))
 
     palette.install(main, "Ctrl+Shift+P")
