@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from qtpy import QtWidgets as QtW, QtGui
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, Signal
 
 from ._list import QCommandList
 from ._commands import Command
@@ -9,6 +9,8 @@ from ._commands import Command
 
 class QCommandPalette(QtW.QWidget):
     """A Qt command palette widget."""
+
+    hidden = Signal()
 
     def __init__(self, parent: QtW.QWidget = None):
         super().__init__(parent)
@@ -22,6 +24,7 @@ class QCommandPalette(QtW.QWidget):
 
         self._line.textChanged.connect(self._on_text_changed)
         self._list.commandClicked.connect(self._on_command_clicked)
+        self._line.editingFinished.connect(self.hide)
 
     def match_color(self) -> str:
         """The color used for the matched characters."""
@@ -86,3 +89,7 @@ class QCommandPalette(QtW.QWidget):
         self.raise_()
         self._line.setFocus()
         return None
+
+    def hide(self):
+        self.hidden.emit()
+        return super().hide()

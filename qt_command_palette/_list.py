@@ -86,6 +86,7 @@ class QCommandList(QtW.QListView):
 
     def __init__(self, parent: QtW.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setModel(QCommandMatchModel(self))
         self.setSelectionMode(QtW.QAbstractItemView.SelectionMode.NoSelection)
         self._selected_index = 0
