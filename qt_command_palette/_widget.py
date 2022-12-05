@@ -7,7 +7,7 @@ from ._list import QCommandList
 from ._commands import Command
 
 
-class QCommandPalette(QtW.QDialog):
+class QCommandPalette(QtW.QWidget):
     """A Qt command palette widget."""
 
     def __init__(self, parent: QtW.QWidget = None):
@@ -24,9 +24,11 @@ class QCommandPalette(QtW.QDialog):
         self._list.commandClicked.connect(self._on_command_clicked)
 
     def match_color(self) -> str:
+        """The color used for the matched characters."""
         return self._list.match_color()
 
     def set_match_color(self, color: str):
+        """Set the color used for the matched characters."""
         return self._list.set_match_color(color)
 
     def add_command(self, cmd: Command):
@@ -81,5 +83,6 @@ class QCommandPalette(QtW.QDialog):
             topleft.setY(topleft.y() + 3)
             self.move(topleft)
 
+        self.raise_()
         self._line.setFocus()
         return None

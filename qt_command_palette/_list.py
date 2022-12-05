@@ -21,7 +21,7 @@ class QCommandMatchModel(QtCore.QAbstractListModel):
     def __init__(self, parent: QtW.QWidget = None):
         super().__init__(parent)
         self._commands: list[Command] = []
-        self._max_matches = 12
+        self._max_matches = 24
 
     def rowCount(self, parent: QtCore.QModelIndex = None) -> int:
         return self._max_matches
@@ -156,6 +156,9 @@ class QCommandList(QtW.QListView):
         cmd = self.command_at(index)
         logger.debug(f"executing command: {cmd.fmt()}")
         cmd()
+        # move to the top
+        self.all_commands.remove(cmd)
+        self.all_commands.insert(0, cmd)
 
     def update_for_text(self, input_text: str) -> None:
         """Update the list to match the input text."""
