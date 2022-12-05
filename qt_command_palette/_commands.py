@@ -15,8 +15,8 @@ class Command(Generic[_R]):
     desc: str
     tooltip: str = ""
 
-    def __call__(self) -> _R:
-        return self.function()
+    def __call__(self, *args, **kwargs) -> _R:
+        return self.function(*args, **kwargs)
 
     def fmt(self) -> str:
         """Format command for display in the palette."""

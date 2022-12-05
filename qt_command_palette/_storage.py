@@ -29,11 +29,13 @@ class Storage:
             cls._INSTANCES[name] = Storage()
         return cls._INSTANCES[name]
 
-    def call(self, func: Callable[..., _R]) -> _R:
+    def call(self, func: Callable[..., _R], parent=None) -> _R:
         """Call a function with variables from the storage."""
         args = []
         for v in inspect.signature(func).parameters.keys():
-            if getter := self._varmap.get(v, None):
+            if v == "self" and parent is not None:
+                args.append(parent)
+            elif getter := self._varmap.get(v, None):
                 args.append(getter())
             else:
                 raise ValueError(f"Variable {v} not found in storage")

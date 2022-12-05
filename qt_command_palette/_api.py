@@ -10,6 +10,8 @@ if TYPE_CHECKING:
     from ._widget import QCommandPalette
     from qtpy import QtWidgets as QtW
 
+    WVDict = weakref.WeakValueDictionary[int, Any]
+
 _F = TypeVar("_F", bound=Callable)
 
 
@@ -35,7 +37,8 @@ class CommandPalette:
 
     def __init__(self, name: str) -> None:
         self._commands: list[Command] = []
-        self._widget_map: dict[int, QCommandPalette] = {}
+        self._parent_to_palette_map: dict[int, QCommandPalette] = {}
+        self._palette_to_parent_map: WVDict = weakref.WeakValueDictionary()
         self._name = name
 
     @property
@@ -92,8 +95,9 @@ class CommandPalette:
             storage = Storage.instance(self._name)
 
             @wraps(func)
-            def _func():
-                return storage.call(func)
+            def _func(qpallete):
+                parent = self._palette_to_parent_map[id(qpallete)]
+                return storage.call(func, parent)
 
             cmd = Command(_func, title, desc, tooltip)
             self._commands.append(cmd)
@@ -110,10 +114,11 @@ class CommandPalette:
         from ._widget import QCommandPalette
 
         _id = id(parent)
-        if (widget := self._widget_map.get(_id)) is None:
+        if (widget := self._parent_to_palette_map.get(_id)) is None:
             widget = QCommandPalette()
             widget.extend_command(self._commands)
-            self._widget_map[_id] = widget
+            self._parent_to_palette_map[_id] = widget
+            self._palette_to_parent_map[id(widget)] = parent
         return widget
 
     def show_widget(self, parent: Any = __default) -> None:

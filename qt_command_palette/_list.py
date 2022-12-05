@@ -155,7 +155,7 @@ class QCommandList(QtW.QListView):
             index = self._selected_index
         cmd = self.command_at(index)
         logger.debug(f"executing command: {cmd.fmt()}")
-        cmd()
+        cmd(self.parent())
         # move to the top
         self.all_commands.remove(cmd)
         self.all_commands.insert(0, cmd)
