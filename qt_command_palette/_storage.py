@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, Callable, TypeVar
+import inspect
 
 _R = TypeVar("_R")
 
@@ -12,12 +13,12 @@ class Storage:
     def __init__(self):
         self._varmap: dict[str, Callable[[], Any]] = {}
 
-    def mark_getter(self, name: str):
+    def mark_getter(self, name: str, func: Callable[[], Any] | None = None):
         def wrapper(f: Callable[[], Any]):
             self._varmap[name] = f
             return f
 
-        return wrapper
+        return wrapper if func is None else wrapper(func)
 
     def mark_constant(self, name: str, value: Any):
         self._varmap[name] = lambda: value
@@ -29,9 +30,9 @@ class Storage:
         return cls._INSTANCES[name]
 
     def call(self, func: Callable[..., _R]) -> _R:
-        varnames = func.__code__.co_varnames
+        """Call a function with variables from the storage."""
         args = []
-        for v in varnames:
+        for v in inspect.signature(func).parameters.keys():
             if getter := self._varmap.get(v, None):
                 args.append(getter())
             else:
@@ -40,4 +41,5 @@ class Storage:
 
 
 def get_storage(name: str = "") -> Storage:
+    """Get the name specific storage instance."""
     return Storage.instance(name)

@@ -11,6 +11,10 @@ from ._commands import Command
 logger = logging.getLogger(__name__)
 
 
+def colored(text: str, color: str) -> str:
+    return f"<b><font color={color!r}>{text}</font></b>"
+
+
 class QCommandMatchModel(QtCore.QAbstractListModel):
     """A list model for the command palette."""
 
@@ -52,9 +56,11 @@ class QCommandLabel(QtW.QLabel):
         self.setToolTip(cmd.tooltip)
 
     def command_text(self) -> str:
+        """The original command text."""
         return self._command_text
 
-    def set_text_colors(self, input_text: str, /):
+    def set_text_colors(self, input_text: str, /, color: str = "blue"):
+        """Set label text color based on the input text."""
         if input_text == "":
             return None
         text = self.command_text()
@@ -66,8 +72,8 @@ class QCommandLabel(QtW.QLabel):
         for match_obj in pattern.finditer(text):
             output_texts.append(text[last_end : match_obj.start()])
             word = match_obj.group()
-            colored = f"<b><font color='blue'>{word}</font></b>"
-            output_texts.append(colored)
+            colored_word = colored(word, color)
+            output_texts.append(colored_word)
             last_end = match_obj.end()
         output_texts.append(text[last_end:])
 
@@ -90,6 +96,14 @@ class QCommandList(QtW.QListView):
             self._label_widgets.append(lw)
             self.setIndexWidget(self.model().index(i), lw)
         self.pressed.connect(self._on_clicked)
+
+        self._match_color = "#468cc6"
+
+    def match_color(self) -> str:
+        return self._match_color
+
+    def set_match_color(self, color: str):
+        self._match_color = color
 
     def _on_clicked(self, index: QtCore.QModelIndex) -> None:
         if index.isValid():
@@ -153,7 +167,7 @@ class QCommandList(QtW.QListView):
                 self.setRowHidden(row, False)
                 lw = self.indexWidget(self.model().index(row))
                 lw.set_command(cmd)
-                lw.set_text_colors(input_text)
+                lw.set_text_colors(input_text, color=self._match_color)
                 row += 1
 
                 if row >= max_matches:

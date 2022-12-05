@@ -8,9 +8,7 @@ from ._commands import Command
 
 
 class QCommandPalette(QtW.QDialog):
-    """
-    A Qt command palette widget.
-    """
+    """A Qt command palette widget."""
 
     def __init__(self, parent: QtW.QWidget = None):
         super().__init__(parent)
@@ -24,6 +22,12 @@ class QCommandPalette(QtW.QDialog):
 
         self._line.textChanged.connect(self._on_text_changed)
         self._list.commandClicked.connect(self._on_command_clicked)
+
+    def match_color(self) -> str:
+        return self._list.match_color()
+
+    def set_match_color(self, color: str):
+        return self._list.set_match_color(color)
 
     def add_command(self, cmd: Command):
         self._list.add_command(cmd)
@@ -56,8 +60,8 @@ class QCommandPalette(QtW.QDialog):
             if key == Qt.Key.Key_Escape:
                 self.hide()
             elif key == Qt.Key.Key_Return:
-                self._list.execute()
                 self.hide()
+                self._list.execute()
             elif key == Qt.Key.Key_Up:
                 self._list.move_selection(-1)
             elif key == Qt.Key.Key_Down:
