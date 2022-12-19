@@ -138,6 +138,10 @@ class QCommandList(QtW.QListView):
         self.all_commands.extend(commands)
         return None
 
+    def clear_commands(self) -> None:
+        """Clear all the command"""
+        return self.all_commands.clear()
+
     def command_at(self, index: int) -> Command:
         return self.indexWidget(self.model().index(index)).command()
 

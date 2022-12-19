@@ -143,6 +143,17 @@ class CommandPalette:
             _register_shortcut(keys, parent, lambda: self.show_widget(parent))
         return None
 
+    def update(self, parent: QtW.QWidget | None = None):
+        if parent is None:
+            for p in self._palette_to_parent_map.values():
+                self.update(p)
+            return None
+        _id = id(parent)
+        widget = self._parent_to_palette_map[_id]
+        widget.clear_commands()
+        widget.extend_command(self._commands)
+        return None
+
 
 class CommandGroup:
     def __init__(self, title: str, parent: CommandPalette) -> None:

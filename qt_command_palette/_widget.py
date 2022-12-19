@@ -42,6 +42,10 @@ class QCommandPalette(QtW.QWidget):
         self._list.extend_command(list_of_commands)
         return None
 
+    def clear_commands(self):
+        self._list.clear_commands()
+        return None
+
     def install_to(self, parent: QtW.QWidget):
         self.setParent(parent, Qt.WindowType.SubWindow)
         self.hide()
@@ -80,11 +84,12 @@ class QCommandPalette(QtW.QWidget):
         if parent := self.parentWidget():
             parent_rect = parent.rect()
             self_size = self.size()
-            w, _ = self_size.width(), self_size.height()
+            w = min(int(parent_rect.width() * 0.8), self_size.width())
             topleft = parent.rect().topLeft()
             topleft.setX(topleft.x() + (parent_rect.width() - w) / 2)
             topleft.setY(topleft.y() + 3)
             self.move(topleft)
+            self.resize(w, self_size.height())
 
         self.raise_()
         self._line.setFocus()
