@@ -65,9 +65,7 @@ class CommandPalette:
         ...
 
     def register(self, *args, **kwargs):
-        """
-        Register a function to the command palette.
-        """
+        """Register a function to the command palette."""
         if len(args) > 0 and callable(args[0]):
             bound = register_with_func.bind(*args, **kwargs)
         else:
@@ -106,11 +104,13 @@ class CommandPalette:
         return wrapper if func is None else wrapper(func)
 
     def add_group(self, title: str) -> CommandGroup:
+        """Add a group to the command palette."""
         return CommandGroup(title, parent=self)
 
     __default = object()
 
     def get_widget(self, parent: Any = __default) -> QCommandPalette:
+        """Get a command palette widget for the given parent widget."""
         from ._widget import QCommandPalette
 
         _id = id(parent)
@@ -144,6 +144,7 @@ class CommandPalette:
         return None
 
     def update(self, parent: QtW.QWidget | None = None):
+        """Update command palette install to the given parent widget."""
         if parent is None:
             for p in self._palette_to_parent_map.values():
                 self.update(p)
