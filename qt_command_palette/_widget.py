@@ -11,6 +11,7 @@ class QCommandLineEdit(QtW.QLineEdit):
     """The line edit used in command palette widget."""
 
     def commandPalette(self) -> QCommandPalette:
+        """The parent command palette widget."""
         return self.parent()
 
     def event(self, e: QtCore.QEvent):
@@ -26,9 +27,13 @@ class QCommandLineEdit(QtW.QLineEdit):
                 self.commandPalette().hide()
                 return True
             elif key == Qt.Key.Key_Return:
-                self.commandPalette().hide()
-                self.commandPalette()._list.execute()
-                return True
+                palette = self.commandPalette()
+                if palette._list.can_execute():
+                    self.commandPalette().hide()
+                    self.commandPalette()._list.execute()
+                    return True
+                else:
+                    return False
             elif key == Qt.Key.Key_Up:
                 self.commandPalette()._list.move_selection(-1)
                 return True

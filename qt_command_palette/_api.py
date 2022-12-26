@@ -15,19 +15,27 @@ if TYPE_CHECKING:
 _F = TypeVar("_F", bound=Callable)
 
 
+def _always_true() -> bool:
+    return True
+
+
 @inspect.signature
 def register_with_func(
     func: Callable,
     title: str | None = None,
     desc: str | None = None,
     tooltip: str | None = None,
+    when: Callable[[], bool] = _always_true,
 ):
     """Template function to provide signature to register() with 'func' argument."""
 
 
 @inspect.signature
 def register_without_func(
-    title: str | None = None, desc: str | None = None, tooltip: str | None = None
+    title: str | None = None,
+    desc: str | None = None,
+    tooltip: str | None = None,
+    when: Callable[[], bool] = _always_true,
 ):
     """Template function to provide signature to register() without 'func' argument."""
 
@@ -43,6 +51,7 @@ class CommandPalette:
 
     @property
     def commands(self) -> list[Command]:
+        """List of all the commands."""
         return self._commands.copy()
 
     @overload
@@ -52,6 +61,7 @@ class CommandPalette:
         title: str | None,
         desc: str | None = None,
         tooltip: str | None = None,
+        when: Callable[[], bool] = _always_true,
     ) -> _F:
         ...
 
@@ -61,6 +71,7 @@ class CommandPalette:
         title: str | None,
         desc: str | None = None,
         tooltip: str | None = None,
+        when: Callable[[], bool] = _always_true,
     ) -> Callable[[_F], _F]:
         ...
 
@@ -79,6 +90,7 @@ class CommandPalette:
         title = bound_args["title"]
         desc = bound_args["desc"]
         tooltip = bound_args["tooltip"]
+        when = bound_args["when"]
 
         if title is None:
             title = ""
@@ -97,7 +109,7 @@ class CommandPalette:
                 parent = self._palette_to_parent_map[id(qpallete)]
                 return storage.call(func, parent)
 
-            cmd = Command(_func, title, desc, tooltip)
+            cmd = Command(_func, title, desc, tooltip, when)
             self._commands.append(cmd)
             return func
 
@@ -178,13 +190,20 @@ class CommandGroup:
 
     @overload
     def register(
-        self, func: _F, desc: str | None = None, tooltip: str | None = None
+        self,
+        func: _F,
+        desc: str | None = None,
+        tooltip: str | None = None,
+        when: Callable[[], bool] = _always_true,
     ) -> _F:
         ...
 
     @overload
     def register(
-        self, desc: str | None = None, tooltip: str | None = None
+        self,
+        desc: str | None = None,
+        tooltip: str | None = None,
+        when: Callable[[], bool] = _always_true,
     ) -> Callable[[_F], _F]:
         ...
 
@@ -257,6 +276,7 @@ def register(
     title: str | None,
     desc: str | None = None,
     tooltip: str | None = None,
+    when: Callable[[], bool] = _always_true,
 ) -> _F:
     ...
 
@@ -266,6 +286,7 @@ def register(
     title: str | None,
     desc: str | None = None,
     tooltip: str | None = None,
+    when: Callable[[], bool] = _always_true,
 ) -> Callable[[_F], _F]:
     ...
 
