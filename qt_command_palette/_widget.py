@@ -86,8 +86,8 @@ class QCommandPalette(QtW.QWidget):
             self_size = self.size()
             w = min(int(parent_rect.width() * 0.8), self_size.width())
             topleft = parent.rect().topLeft()
-            topleft.setX(topleft.x() + (parent_rect.width() - w) / 2)
-            topleft.setY(topleft.y() + 3)
+            topleft.setX(int(topleft.x() + (parent_rect.width() - w) / 2))
+            topleft.setY(int(topleft.y() + 3))
             self.move(topleft)
             self.resize(w, self_size.height())
 
