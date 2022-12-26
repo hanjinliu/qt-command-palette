@@ -176,6 +176,13 @@ class QCommandList(QtW.QListView):
         # move to the top
         self.all_commands.remove(cmd)
         self.all_commands.insert(0, cmd)
+        return None
+
+    def can_execute(self, index: int | None = None) -> bool:
+        if index is None:
+            index = self._selected_index
+        cmd = self.command_at(index)
+        return cmd.enabled()
 
     def update_for_text(self, input_text: str) -> None:
         """Update the list to match the input text."""
