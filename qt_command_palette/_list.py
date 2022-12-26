@@ -9,10 +9,16 @@ from qtpy.QtCore import Qt, Signal
 from ._commands import Command
 
 logger = logging.getLogger(__name__)
+MATCH_COLOR = "blue"
+DISABLED_COLOR = "gray"
+
+
+def bold_colored(text: str, color: str) -> str:
+    return f"<b><font color={color!r}>{text}</font></b>"
 
 
 def colored(text: str, color: str) -> str:
-    return f"<b><font color={color!r}>{text}</font></b>"
+    return f"<font color={color!r}>{text}</font>"
 
 
 class QCommandMatchModel(QtCore.QAbstractListModel):
@@ -59,7 +65,7 @@ class QCommandLabel(QtW.QLabel):
         """The original command text."""
         return self._command_text
 
-    def set_text_colors(self, input_text: str, /, color: str = "blue"):
+    def set_text_colors(self, input_text: str, /, color: str = MATCH_COLOR):
         """Set label text color based on the input text."""
         if input_text == "":
             return None
@@ -72,13 +78,18 @@ class QCommandLabel(QtW.QLabel):
         for match_obj in pattern.finditer(text):
             output_texts.append(text[last_end : match_obj.start()])
             word = match_obj.group()
-            colored_word = colored(word, color)
+            colored_word = bold_colored(word, color)
             output_texts.append(colored_word)
             last_end = match_obj.end()
         output_texts.append(text[last_end:])
 
         self.setText("".join(output_texts))
         return None
+
+    def set_disabled(self) -> None:
+        """Set the label to disabled."""
+        text = self.command_text()
+        self.setText(colored(text, DISABLED_COLOR))
 
 
 class QCommandList(QtW.QListView):
@@ -175,7 +186,10 @@ class QCommandList(QtW.QListView):
                 self.setRowHidden(row, False)
                 lw = self.indexWidget(self.model().index(row))
                 lw.set_command(cmd)
-                lw.set_text_colors(input_text, color=self._match_color)
+                if cmd.enabled():
+                    lw.set_text_colors(input_text, color=self._match_color)
+                else:
+                    lw.set_disabled()
                 row += 1
 
                 if row >= max_matches:

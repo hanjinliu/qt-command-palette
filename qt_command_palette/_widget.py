@@ -11,6 +11,7 @@ class QCommandLineEdit(QtW.QLineEdit):
     """The line edit used in command palette widget."""
 
     def commandPalette(self) -> QCommandPalette:
+        """The parent command palette widget."""
         return self.parent()
 
     def event(self, e: QtCore.QEvent):

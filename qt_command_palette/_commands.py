@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, Generic, TypeVar
 
 
@@ -14,6 +14,7 @@ class Command(Generic[_R]):
     title: str
     desc: str
     tooltip: str = ""
+    when: Callable[..., bool] = field(default=lambda: True)
 
     def __call__(self, *args, **kwargs) -> _R:
         return self.function(*args, **kwargs)
@@ -29,3 +30,7 @@ class Command(Generic[_R]):
         fmt = self.fmt().lower()
         words = input_text.lower().split(" ")
         return all(word in fmt for word in words)
+
+    def enabled(self) -> bool:
+        """Return True if the command is enabled."""
+        return self.when()
