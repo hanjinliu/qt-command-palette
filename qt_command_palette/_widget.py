@@ -1,10 +1,41 @@
 from __future__ import annotations
 
-from qtpy import QtWidgets as QtW, QtGui
+from qtpy import QtWidgets as QtW, QtGui, QtCore
 from qtpy.QtCore import Qt, Signal
 
 from ._list import QCommandList
 from ._commands import Command
+
+
+class QCommandLineEdit(QtW.QLineEdit):
+    """The line edit used in command palette widget."""
+
+    def commandPalette(self) -> QCommandPalette:
+        return self.parent()
+
+    def event(self, e: QtCore.QEvent):
+        if e.type() != QtCore.QEvent.Type.KeyPress:
+            return super().event(e)
+        e = QtGui.QKeyEvent(e)
+        if e.modifiers() in (
+            Qt.KeyboardModifier.NoModifier,
+            Qt.KeyboardModifier.KeypadModifier,
+        ):
+            key = e.key()
+            if key == Qt.Key.Key_Escape:
+                self.commandPalette().hide()
+                return True
+            elif key == Qt.Key.Key_Return:
+                self.commandPalette().hide()
+                self.commandPalette()._list.execute()
+                return True
+            elif key == Qt.Key.Key_Up:
+                self.commandPalette()._list.move_selection(-1)
+                return True
+            elif key == Qt.Key.Key_Down:
+                self.commandPalette()._list.move_selection(1)
+                return True
+        return super().event(e)
 
 
 class QCommandPalette(QtW.QWidget):
@@ -15,7 +46,7 @@ class QCommandPalette(QtW.QWidget):
     def __init__(self, parent: QtW.QWidget = None):
         super().__init__(parent)
 
-        self._line = QtW.QLineEdit()
+        self._line = QCommandLineEdit()
         self._list = QCommandList()
         _layout = QtW.QVBoxLayout(self)
         _layout.addWidget(self._line)
@@ -63,20 +94,6 @@ class QCommandPalette(QtW.QWidget):
         self.hide()
         return super().focusOutEvent(a0)
 
-    def keyPressEvent(self, a0: QtGui.QKeyEvent) -> None:
-        if a0.modifiers() == Qt.KeyboardModifier.NoModifier:
-            key = a0.key()
-            if key == Qt.Key.Key_Escape:
-                self.hide()
-            elif key == Qt.Key.Key_Return:
-                self.hide()
-                self._list.execute()
-            elif key == Qt.Key.Key_Up:
-                self._list.move_selection(-1)
-            elif key == Qt.Key.Key_Down:
-                self._list.move_selection(1)
-        return super().keyPressEvent(a0)
-
     def show(self):
         self._line.setText("")
         self._list.update_for_text("")
@@ -86,8 +103,8 @@ class QCommandPalette(QtW.QWidget):
             self_size = self.size()
             w = min(int(parent_rect.width() * 0.8), self_size.width())
             topleft = parent.rect().topLeft()
-            topleft.setX(topleft.x() + (parent_rect.width() - w) / 2)
-            topleft.setY(topleft.y() + 3)
+            topleft.setX(int(topleft.x() + (parent_rect.width() - w) / 2))
+            topleft.setY(int(topleft.y() + 3))
             self.move(topleft)
             self.resize(w, self_size.height())
 
