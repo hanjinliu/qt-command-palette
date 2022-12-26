@@ -90,6 +90,7 @@ class QCommandLabel(QtW.QLabel):
         """Set the label to disabled."""
         text = self.command_text()
         self.setText(colored(text, DISABLED_COLOR))
+        return None
 
 
 class QCommandList(QtW.QListView):
