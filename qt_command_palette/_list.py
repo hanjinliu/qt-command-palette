@@ -3,8 +3,8 @@ from typing import Any, TYPE_CHECKING, Iterator
 import logging
 import re
 
-from qtpy import QtWidgets as QtW, QtCore
-from qtpy.QtCore import Qt, Signal
+from qtpy import QtWidgets as QtW, QtCore, QtGui
+from qtpy.QtCore import Qt, Signal, Property
 
 from ._commands import Command
 
@@ -27,7 +27,7 @@ class QCommandMatchModel(QtCore.QAbstractListModel):
     def __init__(self, parent: QtW.QWidget = None):
         super().__init__(parent)
         self._commands: list[Command] = []
-        self._max_matches = 24
+        self._max_matches = 80
 
     def rowCount(self, parent: QtCore.QModelIndex = None) -> int:
         return self._max_matches
@@ -110,12 +110,14 @@ class QCommandList(QtW.QListView):
             self.setIndexWidget(self.model().index(i), lw)
         self.pressed.connect(self._on_clicked)
 
-        self._match_color = "#468cc6"
+        self._match_color = QtGui.QColor("#468cc6")
 
-    def match_color(self) -> str:
+    @Property(QtGui.QColor)
+    def matchColor(self) -> QtGui.QColor:
         return self._match_color
 
-    def set_match_color(self, color: str):
+    @matchColor.setter
+    def matchColor(self, color: QtGui.QColor):
         self._match_color = color
 
     def _on_clicked(self, index: QtCore.QModelIndex) -> None:
@@ -195,7 +197,7 @@ class QCommandList(QtW.QListView):
                 lw = self.indexWidget(self.model().index(row))
                 lw.set_command(cmd)
                 if cmd.enabled():
-                    lw.set_text_colors(input_text, color=self._match_color)
+                    lw.set_text_colors(input_text, color=self.matchColor.name())
                 else:
                     lw.set_disabled()
                 row += 1

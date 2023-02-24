@@ -64,11 +64,11 @@ class QCommandPalette(QtW.QWidget):
 
     def match_color(self) -> str:
         """The color used for the matched characters."""
-        return self._list.match_color()
+        return self._list.matchColor
 
-    def set_match_color(self, color: str):
+    def set_match_color(self, color):
         """Set the color used for the matched characters."""
-        return self._list.set_match_color(color)
+        self._list.matchColor = QtGui.QColor(color)
 
     def add_command(self, cmd: Command):
         self._list.add_command(cmd)
