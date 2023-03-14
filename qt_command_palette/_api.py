@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from enum import Enum
 from functools import wraps
 from typing import Any, Callable, TypeVar, overload, TYPE_CHECKING
 import weakref
@@ -40,14 +42,29 @@ def register_without_func(
     """Template function to provide signature to register() without 'func' argument."""
 
 
+class Alignment(Enum):
+    """Alignment flag of the palette."""
+
+    parent = "parent"  # align to the parent widget
+    screen = "screen"  # align to the screen
+
+
 class CommandPalette:
     """The command palette interface."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(
+        self, name: str, *, alignment: str | Alignment = Alignment.parent
+    ) -> None:
         self._commands: list[Command] = []
         self._parent_to_palette_map: dict[int, QCommandPalette] = {}
         self._palette_to_parent_map: WVDict = weakref.WeakValueDictionary()
         self._name = name
+        self._alignment = Alignment(alignment)
+
+    @property
+    def alignment(self) -> Alignment:
+        """Alignment flag of the palette."""
+        return self._alignment
 
     @property
     def commands(self) -> list[Command]:
@@ -87,10 +104,10 @@ class CommandPalette:
         func = bound_args.pop("func", None)
 
         # update defaults
-        title = bound_args["title"]
-        desc = bound_args["desc"]
-        tooltip = bound_args["tooltip"]
-        when = bound_args["when"]
+        title: str | None = bound_args["title"]
+        desc: str | None = bound_args["desc"]
+        tooltip: str | None = bound_args["tooltip"]
+        when: Callable[..., bool] = bound_args["when"]
 
         if title is None:
             title = ""
@@ -135,7 +152,10 @@ class CommandPalette:
 
     def show_widget(self, parent: Any = __default) -> None:
         """Show command palette widget."""
-        self.get_widget(parent).show()
+        if self.alignment is Alignment.parent:
+            self.get_widget(parent).show()
+        else:
+            self.get_widget(parent).show_center()
         return None
 
     def install(self, parent: QtW.QWidget, keys: str | None = None) -> None:
@@ -165,6 +185,18 @@ class CommandPalette:
         widget = self._parent_to_palette_map[_id]
         widget.clear_commands()
         widget.extend_command(self._commands)
+        return None
+
+    def sort(
+        self, rule: Callable[[Command], Any] | None = None, reverse: bool = False
+    ) -> None:
+        """Sort the command palette."""
+        if rule is None:
+
+            def rule(cmd):
+                return cmd.title + cmd.desc
+
+        self._commands.sort(key=rule, reverse=reverse)
         return None
 
 
@@ -239,7 +271,11 @@ _GLOBAL_PALETTES: dict[str, CommandPalette] = {}
 _DEFAULT_PALETTE = CommandPalette(name="default")
 
 
-def get_palette(name: str | None = None) -> CommandPalette:
+def get_palette(
+    name: str | None = None,
+    *,
+    alignment: str | Alignment = Alignment.parent,
+) -> CommandPalette:
     """
     Get the global command palette object.
 
@@ -255,7 +291,9 @@ def get_palette(name: str | None = None) -> CommandPalette:
     if not isinstance(name, str):
         raise TypeError(f"Expected str, got {type(name).__name__}")
     if (palette := _GLOBAL_PALETTES.get(name, None)) is None:
-        palette = _GLOBAL_PALETTES[name] = CommandPalette(name=name)
+        palette = _GLOBAL_PALETTES[name] = CommandPalette(
+            name=name, alignment=alignment
+        )
     return palette
 
 

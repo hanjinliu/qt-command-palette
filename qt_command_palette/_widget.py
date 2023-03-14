@@ -117,6 +117,22 @@ class QCommandPalette(QtW.QWidget):
         self._line.setFocus()
         return None
 
+    def show_center(self):
+        """Show command palette widget in the center of the screen."""
+        self._line.setText("")
+        self._list.update_for_text("")
+        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
+        super().show()
+
+        screen_rect = QtGui.QGuiApplication.primaryScreen().geometry()
+        self.resize(screen_rect.width() * 0.5, screen_rect.height() * 0.5)
+        point = screen_rect.center() - self.rect().center()
+        self.move(point)
+
+        self.raise_()
+        self._line.setFocus()
+        return None
+
     def hide(self):
         self.hidden.emit()
         return super().hide()

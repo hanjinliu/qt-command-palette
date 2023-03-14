@@ -22,7 +22,7 @@ if __name__ == "__main__":
     _checkbox = QtW.QCheckBox("Check")
     main.layout().addWidget(_checkbox)
 
-    palette = get_palette(name=__name__)
+    palette = get_palette(name=__name__, alignment="screen")
     storage = get_storage(name=__name__)
 
     @storage.mark_getter("widget")
