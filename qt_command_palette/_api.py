@@ -193,7 +193,7 @@ class CommandPalette:
         """Sort the command palette."""
         if rule is None:
 
-            def rule(cmd):
+            def rule(cmd: Command):
                 return cmd.title + cmd.desc
 
         self._commands.sort(key=rule, reverse=reverse)
@@ -294,6 +294,8 @@ def get_palette(
         palette = _GLOBAL_PALETTES[name] = CommandPalette(
             name=name, alignment=alignment
         )
+    else:
+        palette._alignment = alignment
     return palette
 
 
