@@ -125,7 +125,10 @@ class QCommandPalette(QtW.QWidget):
         super().show()
 
         screen_rect = QtGui.QGuiApplication.primaryScreen().geometry()
-        self.resize(screen_rect.width() * 0.5, screen_rect.height() * 0.5)
+        self.resize(
+            int(screen_rect.width() * 0.5),
+            int(screen_rect.height() * 0.5),
+        )
         point = screen_rect.center() - self.rect().center()
         self.move(point)
 
