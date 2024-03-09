@@ -114,6 +114,7 @@ class QCommandList(QtW.QListView):
 
     @Property(QtGui.QColor)
     def matchColor(self) -> QtGui.QColor:
+        """Color used for the matched characters."""
         return self._match_color
 
     @matchColor.setter
@@ -211,6 +212,22 @@ class QCommandList(QtW.QListView):
                 self.setRowHidden(row, True)
         self.update_selection()
         self.update()
+        return None
+
+    def set_max_rows(self, max_rows: int) -> None:
+        if max_rows < 0:
+            raise ValueError("max_rows must be non-negative")
+        old = self.model()._max_matches
+        if max_rows == old:
+            return None
+        elif max_rows < old:
+            self.model().beginRemoveRows(QtCore.QModelIndex(), max_rows, old - 1)
+            self.model()._max_matches = max_rows
+            self.model().endRemoveRows()
+        else:
+            self.model().beginInsertRows(QtCore.QModelIndex(), old, max_rows - 1)
+            self.model()._max_matches = max_rows
+            self.model().endInsertRows()
         return None
 
     if TYPE_CHECKING:
