@@ -49,6 +49,13 @@ class Alignment(Enum):
     screen = "screen"  # align to the screen
 
 
+class _Default:
+    pass
+
+
+_default = _Default()
+
+
 class CommandPalette:
     """The command palette interface."""
 
@@ -136,9 +143,7 @@ class CommandPalette:
         """Add a group to the command palette."""
         return CommandGroup(title, parent=self)
 
-    __default = object()
-
-    def get_widget(self, parent: Any = __default) -> QCommandPalette:
+    def get_widget(self, parent: Any = _default) -> QCommandPalette:
         """Get a command palette widget for the given parent widget."""
         from ._widget import QCommandPalette
 
@@ -150,7 +155,7 @@ class CommandPalette:
             self._palette_to_parent_map[id(widget)] = parent
         return widget
 
-    def show_widget(self, parent: Any = __default) -> None:
+    def show_widget(self, parent: Any = _default) -> None:
         """Show command palette widget."""
         if self.alignment is Alignment.parent:
             self.get_widget(parent).show()
@@ -199,14 +204,10 @@ class CommandPalette:
         self._commands.sort(key=rule, reverse=reverse)
         return None
 
-    @property
-    def max_rows(self) -> int:
-        """The maximum number of rows to display."""
-        return self.get_widget()._list.model()._max_matches
-
-    @max_rows.setter
-    def max_rows(self, value: int) -> None:
-        self.get_widget()._list.set_max_rows(value)
+    def set_max_rows(self, value: int) -> None:
+        """Set the maximum number of rows in the command palette."""
+        for p in self._palette_to_parent_map.values():
+            self.get_widget(p)._list.set_max_rows(value)
         return None
 
 
