@@ -46,6 +46,10 @@ if __name__ == "__main__":
     def print_widget(widget: QtW.QWidget):
         print(widget)
 
+    @group_1.register("update max rows")
+    def update_max_rows():
+        palette.max_rows = 5
+
     palette.install(main, "Ctrl+Shift+P")
     main.show()
     sys.exit(app.exec_())

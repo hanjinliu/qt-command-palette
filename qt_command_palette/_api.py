@@ -199,6 +199,16 @@ class CommandPalette:
         self._commands.sort(key=rule, reverse=reverse)
         return None
 
+    @property
+    def max_rows(self) -> int:
+        """The maximum number of rows to display."""
+        return self.get_widget()._list.model()._max_matches
+
+    @max_rows.setter
+    def max_rows(self, value: int) -> None:
+        self.get_widget()._list.set_max_rows(value)
+        return None
+
 
 class CommandGroup:
     def __init__(self, title: str, parent: CommandPalette) -> None:
