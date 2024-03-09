@@ -17,7 +17,7 @@ class QCommandLineEdit(QtW.QLineEdit):
     def event(self, e: QtCore.QEvent):
         if e.type() != QtCore.QEvent.Type.KeyPress:
             return super().event(e)
-        e = QtGui.QKeyEvent(e)
+        assert isinstance(e, QtGui.QKeyEvent)
         if e.modifiers() in (
             Qt.KeyboardModifier.NoModifier,
             Qt.KeyboardModifier.KeypadModifier,
