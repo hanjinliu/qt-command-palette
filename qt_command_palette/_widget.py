@@ -124,7 +124,12 @@ class QCommandPalette(QtW.QWidget):
         self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         super().show()
 
-        screen_rect = QtGui.QGuiApplication.primaryScreen().geometry()
+        if parent := self.parentWidget():
+            screen = parent.screen()
+        else:
+            screen = QtGui.QGuiApplication.screenAt(QtGui.QCursor.pos())
+
+        screen_rect = screen.geometry()
         self.resize(
             int(screen_rect.width() * 0.5),
             int(screen_rect.height() * 0.5),
