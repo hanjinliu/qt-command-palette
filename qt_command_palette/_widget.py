@@ -40,6 +40,19 @@ class QCommandLineEdit(QtW.QLineEdit):
             elif key == Qt.Key.Key_Down:
                 self.commandPalette()._list.move_selection(1)
                 return True
+            elif key == Qt.Key.Key_PageDown:
+                self.commandPalette()._list.move_selection(10)
+                return True
+            elif key == Qt.Key.Key_PageUp:
+                self.commandPalette()._list.move_selection(-10)
+                return True
+        elif e.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            if e.key() == Qt.Key.Key_Up:
+                self.commandPalette()._list.move_selection(-99999999)
+                return True
+            elif e.key() == Qt.Key.Key_Down:
+                self.commandPalette()._list.move_selection(99999999)
+                return True
         return super().event(e)
 
 
